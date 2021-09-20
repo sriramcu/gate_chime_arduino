@@ -1,5 +1,5 @@
 int analogPin = A0;
-int spk = 9;
+int spk = 9; // 
 int i=0;
 int val=0;
 int val1 = 0;
