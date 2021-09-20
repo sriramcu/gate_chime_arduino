@@ -6,7 +6,7 @@ int initial_reading=0;  // Analog input value, max 1023 for Uno
 int confirmation_reading = 0;  // Another variable for analog input value, to avoid false positives
 int repeat=0;  // Number of times an open circuit was detected
 int alarm_enabled = 1;  // Variable to store whether alarm is in "snooze" mode
-uint32_t wait_time= 1 * 10 * 60; //in seconds
+uint32_t wait_time= 1 * 10 * 60;  // in seconds- the amount of time to snooze
 int previous_state = 1;  // Variable to store the previously detected state of the snooze switch (open-0, closed-1)
 int boot = 1;  // variable to handle certain code only once on boot, but after the setup() function
 int snooze_toggled = 0;  // variable to check whether the snooze button was pressed in the previous iteration
@@ -25,6 +25,7 @@ void loop() {
   
   int snooze_analog_reading = analogRead(snooze_button_pin);
 
+  // Compare above reading with the previous state to see whether the alarm should be enabled or snoozed
   if(snooze_analog_reading>650&&!snooze_toggled)
   {  
     if(previous_state == 0 && !boot)
@@ -43,10 +44,11 @@ void loop() {
       boot = 0;
   }
 
+  // Alarm is disabled if the snooze button is toggled
   if(snooze_toggled==1)
   {  
     alarm_enabled  = 0;
-    Serial.println("Broke handled");
+    Serial.println("Snooze handled");
   }
 
   if(alarm_enabled == 0)
@@ -54,7 +56,7 @@ void loop() {
     for(snooze_timer=0;snooze_timer<wait_time;snooze_timer++)
     {
       delay(1000); 
-      snooze_analog_reading = analogRead(snooze_button_pin);
+      snooze_analog_reading = analogRead(snooze_button_pin);  // to undo the snooze
       if(snooze_analog_reading>650 && previous_state == 0)
       {
         previous_state = 1;
@@ -88,6 +90,8 @@ void loop() {
         repeat++;
       else
         break;
+
+      // check 4 times in a row for an open circuit. If so then the gate alarm goes off
     }
   }
 
@@ -121,13 +125,14 @@ void loop() {
         break; 
 
       snooze_analog_reading = analogRead(snooze_button_pin);
-
+      
+      // To handle snooze button click while the alarm is ringing
       if(snooze_analog_reading>650 && previous_state == 0)
       {
         previous_state = 1;
         snooze_toggled = 1;
       
-        Serial.println("Alarms disabled");
+        Serial.println("Alarm snoozed");
         break;
       }
 
@@ -136,7 +141,7 @@ void loop() {
         previous_state = 0;
         snooze_toggled = 1;
       
-        Serial.println("Alarms disabled");
+        Serial.println("Alarm snoozed");
         break;
       }
 
