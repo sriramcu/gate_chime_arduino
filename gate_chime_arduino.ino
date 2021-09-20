@@ -1,127 +1,151 @@
 int analogPin = A0;
-int spk = 9;  // GPIO pin for piezo speaker
+int snooze_button_pin = A5;
+int speaker_pin = 9;  // GPIO pin for piezo speaker
 int i=0;  // Counter variable for alarm playback iterations
-int val=0;  // Analog input value, max 1023 for Uno
-int val1 = 0;  // Another variable for analog input value, to avoid false positives
+int initial_reading=0;  // Analog input value, max 1023 for Uno
+int confirmation_reading = 0;  // Another variable for analog input value, to avoid false positives
 int repeat=0;  // Number of times an open circuit was detected
 int alarm_enabled = 1;  // Variable to store whether alarm is in "snooze" mode
 uint32_t wait_time= 1 * 10 * 60; //in seconds
-int analog_state = 1;
-int boot = 1;
-int broke = 0;
+int previous_state = 1;  // Variable to store the previously detected state of the snooze switch (open-0, closed-1)
+int boot = 1;  // variable to handle certain code only once on boot, but after the setup() function
+int snooze_toggled = 0;  // variable to check whether the snooze button was pressed in the previous iteration
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  pinMode(spk,OUTPUT);
+  pinMode(speaker_pin,OUTPUT);
 }
+
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int ctr = 0;
+  int snooze_timer = 0;
   
-  int vals = analogRead(A5);
-  if(vals>650&&!broke)
-  {
-    if(analog_state == 0 && !boot)
+  int snooze_analog_reading = analogRead(snooze_button_pin);
+
+  if(snooze_analog_reading>650&&!snooze_toggled)
+  {  
+    if(previous_state == 0 && !boot)
       alarm_enabled = !(alarm_enabled);
-    analog_state = 1;
-    if(boot)
-      boot = 0;
-  }
-  else if(vals<50&&!broke)
-  {
-    if(analog_state == 1 && !boot)
-        alarm_enabled = !(alarm_enabled);
-    analog_state = 0;
+    previous_state = 1;
     if(boot)
       boot = 0;
   }
 
-  if(broke==1){
+  else if(snooze_analog_reading<50&&!snooze_toggled)
+  {  
+    if(previous_state == 1 && !boot)
+      alarm_enabled = !(alarm_enabled);
+    previous_state = 0;
+    if(boot)
+      boot = 0;
+  }
+
+  if(snooze_toggled==1)
+  {  
     alarm_enabled  = 0;
     Serial.println("Broke handled");
   }
+
   if(alarm_enabled == 0)
   {
-    for(ctr=0;ctr<wait_time;ctr++)
+    for(snooze_timer=0;snooze_timer<wait_time;snooze_timer++)
     {
       delay(1000); 
-      vals = analogRead(A5);
-      if(vals>650 && analog_state == 0){
-        analog_state = 1;
+      snooze_analog_reading = analogRead(snooze_button_pin);
+      if(snooze_analog_reading>650 && previous_state == 0)
+      {
+        previous_state = 1;
         break;
       }
-      else if(vals<50 && analog_state == 1){
-        analog_state = 0;
+      else if(snooze_analog_reading<50 && previous_state == 1){
+        previous_state = 0;
         break;
       }
-     }  
-     ctr = 0;
-     alarm_enabled = 1;
-     broke = 0;
+    }
+
+    snooze_timer = 0;
+    alarm_enabled = 1;
+    snooze_toggled = 0;
+    
   }
   
   repeat=0;
-  val = analogRead(analogPin);
+  initial_reading = analogRead(analogPin);
   delay(100);
-  Serial.println(val);
-  if(val<800 && alarm_enabled)
+  Serial.println(initial_reading);
+
+
+  if(initial_reading<800 && alarm_enabled)
   {
-   while(repeat<4)
-   {
-    delay(50);
-    val = analogRead(analogPin);
-    if(val<800)
-      repeat++;
-    else
-      break;
+    while(repeat<4)
+    {
+      delay(50);
+      initial_reading = analogRead(analogPin);
+      if(initial_reading<800)
+        repeat++;
+      else
+        break;
     }
   }
+
+
   if(repeat == 4)
   {
     Serial.println("ALARM");
     for(i=0;i<40;i++)
     {
-    digitalWrite(spk,HIGH);
-    delay(50);
-    digitalWrite(spk,LOW);
-    delay(50);
-    digitalWrite(spk,HIGH);
-    delay(50);
-    digitalWrite(spk,LOW);
-    delay(50);
-    digitalWrite(spk,HIGH);
-    delay(50);
-    digitalWrite(spk,LOW);
-    delay(50);
-  
-    delay(400);
-    val = analogRead(analogPin);
-    delay(100);
-    val1 = analogRead(analogPin);
-    if(val>800 && val1>800 && i>4)
-      break; 
+      digitalWrite(speaker_pin,HIGH);
+      delay(50);
+      digitalWrite(speaker_pin,LOW);
+      delay(50);
+      digitalWrite(speaker_pin,HIGH);
+      delay(50);
+      digitalWrite(speaker_pin,LOW);
+      delay(50);
+      digitalWrite(speaker_pin,HIGH);
+      delay(50);
+      digitalWrite(speaker_pin,LOW);
+      delay(50);    
+      delay(400);
 
-    vals = analogRead(A5);
-      if(vals>650 && analog_state == 0){
-        analog_state = 1;
-        broke = 1;
-        Serial.println("Broke");
+      initial_reading = analogRead(analogPin);
+
+      delay(100);
+
+      confirmation_reading = analogRead(analogPin);
+
+      if(initial_reading>800 && confirmation_reading>800 && i>4)
+        break; 
+
+      snooze_analog_reading = analogRead(snooze_button_pin);
+
+      if(snooze_analog_reading>650 && previous_state == 0)
+      {
+        previous_state = 1;
+        snooze_toggled = 1;
+      
+        Serial.println("Alarms disabled");
         break;
       }
-      else if(vals<50 && analog_state == 1){
-        analog_state = 0;
-        broke = 1;
-        Serial.println("Broke");
+
+      else if(snooze_analog_reading<50 && previous_state == 1)
+      {
+        previous_state = 0;
+        snooze_toggled = 1;
+      
+        Serial.println("Alarms disabled");
         break;
       }
-     }
+
+    } //endfor
      
-    }
+  }
   
   else
     Serial.println("NO ALARM"); 
-  //Serial.println("Switch");
-  //Serial.println(analogRead(A5));
+  
   delay(100);
 }
