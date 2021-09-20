@@ -1,10 +1,10 @@
 int analogPin = A0;
-int spk = 9; // 
-int i=0;
-int val=0;
-int val1 = 0;
-int repeat=0;
-int alarm_enabled = 1;
+int spk = 9;  // GPIO pin for piezo speaker
+int i=0;  // Counter variable for alarm playback iterations
+int val=0;  // Analog input value, max 1023 for Uno
+int val1 = 0;  // Another variable for analog input value, to avoid false positives
+int repeat=0;  // Number of times an open circuit was detected
+int alarm_enabled = 1;  // Variable to store whether alarm is in "snooze" mode
 uint32_t wait_time= 1 * 10 * 60; //in seconds
 int analog_state = 1;
 int boot = 1;
