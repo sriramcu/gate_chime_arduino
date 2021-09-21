@@ -1,5 +1,5 @@
-# gate_chime_arduino
-Arduino based system that raises a custom alarm when the gate is opened, by using metallic contacts.
+# Arduino Gate Chime
+An Arduino based system that raises an alarm when the gate is opened, by using metallic contacts on the gate latch.
 
 ## Requirements  
 
@@ -17,7 +17,7 @@ Arduino based system that raises a custom alarm when the gate is opened, by usin
 
 ## Circuit Diagram  
 
-<img width="597" alt="circuit_diagram" src="https://user-images.githubusercontent.com/67961190/134155146-3c88c725-7d40-482c-8a99-6ddd421136c1.png">
+<p align="center"><img width="550" alt="gate_open" src="https://user-images.githubusercontent.com/67961190/134167819-6976f00f-e9ca-47a0-996d-01f595a7d616.png"></p>
 
 Fritzing diagram will be added in the near future.  
 
