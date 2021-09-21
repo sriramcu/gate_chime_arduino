@@ -5,5 +5,9 @@ Arduino based system that raises a custom alarm when the gate is opened, by usin
 Will be updated soon.
 
 
-https://user-images.githubusercontent.com/67961190/134154861-80c0a98f-185c-42f8-b080-e43af6a9198d.mp4
+
+
+
+
+https://user-images.githubusercontent.com/67961190/134155049-d0c94e4e-a152-4968-8f4b-b50a6d17e486.mp4
 
